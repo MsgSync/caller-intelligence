@@ -1,0 +1,1 @@
+{"name":"@caller/reputation-worker","private":true,"version":"0.1.0","scripts":{"dev":"tsx watch src/index.ts"},"dependencies":{"@caller/database":"workspace:*","@caller/reputation":"workspace:*","tsx":"^4.20.5"}}

@@ -1,0 +1,1 @@
+console.log("Reputation worker scaffold ready. Connect Redis queue + Prisma here.");

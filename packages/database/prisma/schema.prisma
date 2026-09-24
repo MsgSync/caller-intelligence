@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ReportCategory {
+  SPAM
+  SCAM
+  TELEMARKETING
+  ROBOCALL
+  OTHER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  phone        String   @unique
+  displayName  String?
+  createdAt    DateTime @default(now())
+  reports      Report[]
+}
+
+model PhoneNumber {
+  id                 String   @id @default(cuid())
+  e164               String   @unique
+  displayName        String?
+  verifiedBusinessId String?
+  spamScore          Int      @default(0)
+  confidence         Float    @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  reports            Report[]
+  business           Business? @relation(fields: [verifiedBusinessId], references: [id])
+}
+
+model Report {
+  id          String        @id @default(cuid())
+  phoneId     String
+  reporterId  String
+  category    ReportCategory
+  reason      String?
+  createdAt   DateTime      @default(now())
+  phone       PhoneNumber   @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+  reporter    User          @relation(fields: [reporterId], references: [id])
+  @@index([phoneId, createdAt])
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  website     String?
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  numbers     PhoneNumber[]
+}

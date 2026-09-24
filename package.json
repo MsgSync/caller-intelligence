@@ -1,0 +1,19 @@
+{
+  "name": "caller-intelligence",
+  "private": true,
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "db:generate": "pnpm --filter @caller/database prisma:generate",
+    "db:migrate": "pnpm --filter @caller/database prisma:migrate",
+    "db:studio": "pnpm --filter @caller/database prisma:studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2"
+  }
+}
