@@ -1,7 +1,0 @@
-
-> @caller/auth@0.1.0 test /Users/khulnasoft/Projects/caller-intelligence/packages/auth
-> vitest run
-
-
- RUN  v3.2.7 /Users/khulnasoft/Projects/caller-intelligence/packages/auth
-
