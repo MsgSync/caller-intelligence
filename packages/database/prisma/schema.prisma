@@ -15,25 +15,73 @@ enum ReportCategory {
   OTHER
 }
 
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum Tier {
+  FREE
+  PREMIUM
+  BUSINESS
+}
 model User {
-  id           String   @id @default(cuid())
-  phone        String   @unique
+  id           String           @id @default(cuid())
+  phone        String           @unique
   displayName  String?
-  createdAt    DateTime @default(now())
+  role         String           @default("USER")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
   reports      Report[]
+  sessions     Session[]
+  identityClaims IdentityClaim[]
+  dataDeletions DataDeletionRecord[]
+  auditEvents  AuditEvent[]
+  verifications VerificationRecord[]
+  appeals      Appeal[]
+  subscription Tier   @default(FREE)
+  twoFactorSecret TwoFactorSecret?
+  usageMetering UsageMetering[]
+  billing Billing[]
+  entitlements   Entitlement[]
+  blockLists         BlockList[]
+  reportAfterCalls   ReportAfterCall[]
+  androidIntegrations AndroidIntegration[]
+  closedBetas       ClosedBeta[]
 }
 
 model PhoneNumber {
-  id                 String   @id @default(cuid())
-  e164               String   @unique
+  id                 String           @id @default(cuid())
+  e164               String           @unique
   displayName        String?
   verifiedBusinessId String?
-  spamScore          Int      @default(0)
-  confidence         Float    @default(0)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  spamScore          Int              @default(0)
+  confidence         Float            @default(0)
+  riskLevel          RiskLevel        @default(LOW)
+  privacyLevel       String           @default("PUBLIC")
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  mlFeatures         MLFeature[]
+  mlTrainingData     MLTrainingData[]
+  callerIDs          CallerID[]
+  callDirectories    CallDirectory[]
+  offlineCaches      OfflineCache[]
+  smsIntegrations    SMSIntegration[]
+  blockLists         BlockList[]
+  reportAfterCalls   ReportAfterCall[]
+  callerUI           CallerUI[]
   reports            Report[]
-  business           Business? @relation(fields: [verifiedBusinessId], references: [id])
+  aliases            NumberAlias[]
+  verifications      VerificationRecord[]
+  business           Business?        @relation(fields: [verifiedBusinessId], references: [id])
+  auditEvents        AuditEvent[]
 }
 
 model Report {
@@ -42,6 +90,9 @@ model Report {
   reporterId  String
   category    ReportCategory
   reason      String?
+  processed   Boolean       @default(false)
+  feedback    Feedback?
+  appeals     Appeal[]
   createdAt   DateTime      @default(now())
   phone       PhoneNumber   @relation(fields: [phoneId], references: [id], onDelete: Cascade)
   reporter    User          @relation(fields: [reporterId], references: [id])
@@ -49,10 +100,389 @@ model Report {
 }
 
 model Business {
-  id          String   @id @default(cuid())
+  id          String        @id @default(cuid())
   name        String
   website     String?
-  verified    Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  verified    Boolean       @default(false)
+  logo        String?
+  category    String?
+  createdAt   DateTime      @default(now())
   numbers     PhoneNumber[]
+  verifications VerificationRecord[]
+  phoneVerifications BusinessPhoneVerification[]
+  domainVerifications BusinessDomainVerification[]
+  apiKeys ApiKey[]
+  businessHours        BusinessHours[]
+  impersonationAlerts    ImpersonationAlert[]
+  documentVerifications DocumentVerification[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model IdentityClaim {
+  id          String   @id @default(cuid())
+  userId      String
+  phone       String   @unique
+  claimType   String
+  claimValue  String
+  verified    Boolean  @default(false)
+  verifiedAt  DateTime?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, claimType])
+}
+
+model NumberAlias {
+  id          String   @id @default(cuid())
+  phoneId     String
+  aliasE164   String   @unique
+  aliasType   String
+  createdAt   DateTime @default(now())
+  phone       PhoneNumber @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+  @@index([aliasE164])
+}
+
+model CountryCarrierMetadata {
+  id              String   @id @default(cuid())
+  countryCode     String
+  countryName     String
+  carrierName     String?
+  carrierCode     String?
+  isScamHighRisk  Boolean  @default(false)
+  e164Prefix      String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@unique([countryCode, carrierName, carrierCode])
+}
+
+model VerificationRecord {
+  id            String           @id @default(cuid())
+  entityId      String
+  entityType    String
+  status        VerificationStatus @default(PENDING)
+  verifiedById  String?
+  documentUrl   String?
+  notes         String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  verifiedBy    User?            @relation(fields: [verifiedById], references: [id])
+  phone         PhoneNumber?     @relation(fields: [phoneId], references: [id])
+  business      Business?        @relation(fields: [businessId], references: [id])
+  phoneId       String?
+  businessId    String?
+}
+
+model Feedback {
+  id              String   @id @default(cuid())
+  reportId        String   @unique
+  userId          String
+  isFalsePositive Boolean  @default(false)
+  comment         String?
+  createdAt       DateTime @default(now())
+  report          Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+enum AuditAction {
+  NUMBER_LOOKUP
+  REPORT_SUBMITTED
+  REPORT_PROCESSED
+  REPUTATION_UPDATED
+  USER_CREATED
+  USER_LOGIN
+  VERIFICATION_STARTED
+  VERIFICATION_COMPLETED
+  NUMBER_BLOCKED
+  DATA_DELETION_REQUESTED
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  action    AuditAction
+  entityType String?
+  entityId  String?
+  details   String?
+  actorId   String?
+  ip        String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [actorId], references: [id])
+  phone     PhoneNumber? @relation(fields: [phoneId], references: [id])
+  phoneId   String?
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model TwoFactorSecret {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  secret    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+model MLFeature {
+  id        String   @id @default(cuid())
+  phoneId   String
+  feature   String
+  value     Float
+  createdAt DateTime @default(now())
+  phoneNumber PhoneNumber @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+}
+
+model MLTrainingData {
+  id        String   @id @default(cuid())
+  phoneId   String
+  label     String
+  features  String
+  createdAt DateTime @default(now())
+  phoneNumber PhoneNumber @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+}
+
+model MessageRisk {
+  id          String   @id @default(cuid())
+  messageId   String
+  riskScore   Float
+  riskLevel   String   @default("LOW")
+  createdAt   DateTime @default(now())
+}
+
+model URLReputation {
+  id          String   @id @default(cuid())
+  url         String   @unique
+  riskScore   Float    @default(0)
+  isPhishing  Boolean  @default(false)
+  isMalware   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ImpersonationAlert {
+  id          String   @id @default(cuid())
+  businessId  String
+  suspectedId String
+  riskScore   Float    @default(0)
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model ScamCampaign {
+  id          String   @id @default(cuid())
+  name        String?
+  phoneIds    String[]
+  riskScore   Float    @default(0)
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+}
+
+model CallerID {
+  id          String   @id @default(cuid())
+  phoneId     String
+  displayName String?
+  isVerified  Boolean  @default(false)
+  source      String   @default("USER")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  phoneNumber PhoneNumber @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+}
+
+model CallDirectory {
+  id          String   @id @default(cuid())
+  phoneId     String
+  countryCode String
+  carrier     String?
+  isSpam      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  phoneNumber PhoneNumber @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+}
+
+model OfflineCache {
+  id        String   @id @default(cuid())
+  phoneId   String
+  data      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  phoneNumber PhoneNumber @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+}
+
+model BlockList {
+  id        String   @id @default(cuid())
+  userId    String
+  phoneId   String
+  reason    String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phoneNumber PhoneNumber @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+}
+
+model ReportAfterCall {
+  id        String   @id @default(cuid())
+  phoneId   String
+  userId    String
+  reportId  String?
+  createdAt DateTime @default(now())
+  phoneNumber PhoneNumber @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SMSIntegration {
+  id          String   @id @default(cuid())
+  phoneId     String
+  messageId   String?
+  content     String?
+  riskScore   Float    @default(0)
+  createdAt   DateTime @default(now())
+  phoneNumber PhoneNumber @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+}
+
+model DataDeletionRecord {
+  id          String   @id @default(cuid())
+  userId      String
+  scope       String
+  status      String   @default("PENDING")
+  scheduledAt DateTime
+  completedAt DateTime?
+  reason      String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+model BusinessPhoneVerification {
+  id          String   @id @default(cuid())
+  businessId  String
+  phone       String
+  code        String
+  verified    Boolean  @default(false)
+  verifiedAt  DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  @@unique([businessId, phone])
+}
+
+model BusinessDomainVerification {
+  id          String   @id @default(cuid())
+  businessId  String
+  domain      String
+  verified    Boolean  @default(false)
+  verifiedAt  DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  @@unique([businessId, domain])
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  businessId  String
+  key         String   @unique
+  name        String
+  permissions String[]
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model BusinessHours {
+  id          String   @id @default(cuid())
+  businessId  String
+  dayOfWeek   Int
+  openTime    String?
+  closeTime   String?
+  isOpen24h   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  @@unique([businessId, dayOfWeek])
+}
+model Appeal {
+  id          String   @id @default(cuid())
+  reportId    String
+  userId      String
+  reason      String
+  status      String   @default("PENDING")
+  resolution  String?
+  resolvedById String?
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  report      Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UsageMetering {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  count     Int      @default(0)
+  period    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Billing {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float
+  currency  String   @default("USD")
+  status    String   @default("PENDING")
+  period    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Entitlement {
+  id        String   @id @default(cuid())
+  userId    String
+  feature   String
+  granted   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CallerUI {
+  id          String   @id @default(cuid())
+  phoneId     String
+  theme       String   @default("LIGHT")
+  fontSize    Int      @default(16)
+  showSpam    Boolean  @default(true)
+  showAds     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  phoneNumber PhoneNumber @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+}
+
+model DocumentVerification {
+  id         String   @id @default(cuid())
+  businessId String
+  docType    String
+  docUrl     String
+  status     String   @default("PENDING")
+  verifiedAt DateTime?
+  createdAt  DateTime @default(now())
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model AndroidIntegration {
+  id        String   @id @default(cuid())
+  userId    String
+  deviceId  String?
+  pushToken String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClosedBeta {
+  id       String   @id @default(cuid())
+  userId   String
+  status   String   @default("PENDING")
+  joinedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

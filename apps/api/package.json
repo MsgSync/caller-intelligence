@@ -1,6 +1,1 @@
-{
-  "name":"@caller/api","private":true,"version":"0.1.0","type":"module",
-  "scripts":{"dev":"tsx watch src/server.ts","build":"tsc","typecheck":"tsc --noEmit"},
-  "dependencies":{"@caller/database":"workspace:*","@caller/phone":"workspace:*","@caller/reputation":"workspace:*","fastify":"^5.5.0","@fastify/cors":"^11.0.0"},
-  "devDependencies":{"tsx":"^4.20.5","typescript":"^5.9.2"}
-}
+{"name":"@caller/api","private":true,"version":"0.1.0","type":"module","scripts":{"dev":"tsx watch src/server.ts","build":"tsc","typecheck":"tsc --noEmit"},"dependencies":{"@caller/database":"workspace:*","@caller/phone":"workspace:*","@caller/reputation":"workspace:*","@caller/shared":"workspace:*","@caller/auth":"workspace:*","@prisma/client":"^6.16.2","prisma":"^6.16.2","fastify":"^5.5.0","@fastify/cors":"^11.0.0","ioredis":"^5.5.0","jsonwebtoken":"^9.0.0"},"devDependencies":{"tsx":"^4.20.5","typescript":"^5.9.2"}}

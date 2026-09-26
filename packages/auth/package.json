@@ -1,0 +1,1 @@
+{"name":"@caller/auth","private":true,"version":"0.1.0","type":"module","main":"src/index.ts","scripts":{"typecheck":"tsc --noEmit","test":"vitest run"},"dependencies":{"jsonwebtoken":"^9.0.0"},"devDependencies":{"typescript":"^5.9.2","@types/jsonwebtoken":"^9.0.0","vitest":"^3.2.4"}}
