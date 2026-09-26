@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/rushstack/api-extractor/v7/api-extractor.schema.json",
+  "mainEntryPointFileDirectory": "./apps/api/src",
+  "apiReport": {
+    "enabled": true,
+    "reportFileName": "api-report.md"
+  },
+  "docModel": {
+    "enabled": true
+  },
+  "dtsRollup": {
+    "enabled": true,
+    "publicTrimmedFileName": "dist/index.d.ts"
+  },
+  "messages": {
+    "extractorMessageReporting": {
+      "default": {
+        "logLevel": "warning",
+        "addToApiReportFile": true
+      }
+    }
+  }
+}

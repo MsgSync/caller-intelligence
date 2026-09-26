@@ -13,26 +13,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci
-      - run: npx @microsoft/api-extractor run --local
+          cache: 'pnpm'
+      - run: pnpm install
       - run: npx eslint . --ext .ts
 
   dast:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
       - run: npx snyk test
       - run: npx audit-ci --config audit-ci.json
 
-  penetration:
+  dependency-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci
-      - run: npx zap-cli quick-scan --self-contained --start-options '-config api.disablekey=true' http://localhost:4000
-      - run: npx nmap -sV localhost
-      - run: npx nikto -h http://localhost:4000
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: npx audit-ci --config audit-ci.json

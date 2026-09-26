@@ -1,0 +1,8 @@
+{
+  "name": "caller-intelligence",
+  "version": "1.0.0",
+  "acceptModerate": true,
+  "acceptHigh": false,
+  "allow": [],
+  "ignore": []
+}
