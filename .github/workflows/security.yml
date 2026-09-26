@@ -31,8 +31,6 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install
-      - run: npx snyk test
-        continue-on-error: true
       - run: npx audit-ci --config audit-ci.json
 
   dependency-check:
