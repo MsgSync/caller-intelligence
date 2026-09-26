@@ -1,3 +1,5 @@
+const tsPlugin = require("@typescript-eslint");
+
 module.exports = [
   {
     files: ["**/*.ts"],
@@ -13,6 +15,9 @@ module.exports = [
         module: "readonly",
         require: "readonly",
       },
+    },
+    plugins: {
+      "@typescript-eslint": tsPlugin,
     },
     rules: {
       "@typescript-eslint/no-unused-vars": "warn",
