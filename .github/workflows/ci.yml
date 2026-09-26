@@ -17,6 +17,7 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install
+      - run: pnpm run db:generate
       - run: pnpm run test
       - run: pnpm run build --filter=@caller/api
 
@@ -42,6 +43,7 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install
+      - run: pnpm run db:generate
       - run: pnpm run typecheck --filter=@caller/api
 
   security:
