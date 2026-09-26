@@ -197,7 +197,7 @@ export async function getReporterReputation(reporterId: string) {
   const reports = await prisma.report.findMany({ where: { reporterId }, include: { feedback: true } });
   const total = reports.length;
   if (total === 0) return { reporterId, reportCount: 0, falsePositiveRate: 0, trustScore: 50 };
-  const falsePositives = reports.filter((r) => r.feedback?.isFalsePositive).length;
+  const falsePositives = reports.filter((r: any) => r.feedback?.isFalsePositive).length;
   const falsePositiveRate = falsePositives / total;
   const trustScore = Math.round((1 - falsePositiveRate) * 100);
   return { reporterId, reportCount: total, falsePositiveRate, trustScore };

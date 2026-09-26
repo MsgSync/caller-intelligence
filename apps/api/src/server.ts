@@ -196,7 +196,7 @@ app.get("/v1/businesses", async (request, reply) => {
   const query = request.query as { name?: string } | undefined; const name = query?.name;
   if (!name) return reply.code(400).send({ error: "name query param required" });
   const results = await getBusinessByName(name);
-  return results.map((b) => ({ id: b.id, name: b.name, website: b.website, verified: b.verified }));
+  return results.map((b: any) => ({ id: b.id, name: b.name, website: b.website, verified: b.verified }));
 });
 
 app.get("/v1/admin/risk-bands", async (request, reply) => {
@@ -369,13 +369,13 @@ app.get("/v1/search", async (request, reply) => {
   const query = request.query as { q?: string; verified?: string } | undefined; const q = query?.q; const verified = query?.verified;
   if (!q) return reply.code(400).send({ error: "q required" });
   const results = await searchBusinesses({ name: q, verified: verified === "true" ? true : verified === "false" ? false : undefined });
-  return results.map((b) => ({ id: b.id, name: b.name, website: b.website, verified: b.verified }));
+  return results.map((b: any) => ({ id: b.id, name: b.name, website: b.website, verified: b.verified }));
 });
 app.get("/v1/search/numbers", async (request, reply) => {
   const q = (request.query as { q?: string; verified?: string; riskLevel?: string; take?: string })?.q;
   if (!q) return reply.code(400).send({ error: "q required" });
   const results = await searchNumbers({ query: q, verified: (request.query as any)?.verified === "true" ? true : (request.query as any)?.verified === "false" ? false : undefined, riskLevel: (request.query as any)?.riskLevel, take: parseInt((request.query as any)?.take ?? "20") });
-  return results.map((n) => ({ id: n.id, e164: n.e164, displayName: n.displayName, verified: n.verifiedBusinessId ? true : false }));
+  return results.map((n: any) => ({ id: n.id, e164: n.e164, displayName: n.displayName, verified: n.verifiedBusinessId ? true : false }));
 });
 
 app.get("/v1/admin/dashboard", async (request, reply) => {
@@ -399,7 +399,7 @@ app.get("/v1/search/businesses", async (request, reply) => {
   const q = (request.query as { q?: string; verified?: string; take?: string })?.q;
   if (!q) return reply.code(400).send({ error: "q required" });
   const results = await fuzzySearchBusinesses({ query: q, verified: (request.query as any)?.verified === "true" ? true : (request.query as any)?.verified === "false" ? false : undefined, take: parseInt((request.query as any)?.take ?? "20") });
-  return results.map((b) => ({ id: b.id, name: b.name, website: b.website, verified: b.verified }));
+  return results.map((b: any) => ({ id: b.id, name: b.name, website: b.website, verified: b.verified }));
 });
 
 app.patch("/v1/admin/reports/:id/override", async (request, reply) => {
@@ -450,7 +450,7 @@ app.get("/v1/search/businesses", async (request, reply) => {
   const q = (request.query as { q?: string; take?: string })?.q;
   if (!q) return reply.code(400).send({ error: "q required" });
   const results = await searchWithPrivacy({ query: q, take: parseInt((request.query as any)?.take ?? "20") });
-  return results.map((b) => ({ id: b.id, name: b.name, website: b.website, verified: b.verified }));
+  return results.map((b: any) => ({ id: b.id, name: b.name, website: b.website, verified: b.verified }));
 });
 
 app.patch("/v1/businesses/:id/logo", async (request, reply) => {
