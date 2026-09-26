@@ -11,38 +11,57 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci
-      - run: npx turbo run test --filter=caller-intelligence
-      - run: npx turbo run build --filter=caller-intelligence
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm run test
+      - run: pnpm run build --filter=@caller/api
 
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci
-      - run: npx turbo run lint --filter=caller-intelligence
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm run lint --filter=@caller/api
 
   typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci
-      - run: npx turbo run typecheck --filter=caller-intelligence
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm run typecheck --filter=@caller/api
 
   security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
       - run: npx audit-ci --config audit-ci.json
       - run: npx snyk test
       - run: npx @microsoft/api-extractor run --local
