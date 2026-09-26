@@ -313,9 +313,8 @@ export async function scanDependencies() {
   return { scanned: true, highRiskPackages, timestamp: new Date() };
 }
 
-export async function searchWithPrivacy(params: { query: string; privacyLevel?: string; take?: number }) {
+export async function searchWithPrivacy(params: { query: string; take?: number }) {
   const where: any = { OR: [{ name: { contains: params.query, mode: 'insensitive' } }, { website: { contains: params.query, mode: 'insensitive' } }] };
-  if (params.privacyLevel) where.privacyLevel = params.privacyLevel;
   return prisma.business.findMany({ where, take: params.take ?? 20 });
 }
 

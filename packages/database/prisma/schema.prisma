@@ -425,6 +425,7 @@ model UsageMetering {
   period    String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, action, period])
 }
 
 model Billing {
@@ -445,6 +446,7 @@ model Entitlement {
   granted   Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, feature])
 }
 
 model CallerUI {

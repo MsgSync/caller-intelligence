@@ -447,10 +447,10 @@ app.get("/v1/admin/dependencies", async (request, reply) => {
 });
 
 app.get("/v1/search/businesses", async (request, reply) => {
-  const q = (request.query as { q?: string; privacyLevel?: string; take?: string })?.q;
+  const q = (request.query as { q?: string; take?: string })?.q;
   if (!q) return reply.code(400).send({ error: "q required" });
-  const results = await searchWithPrivacy({ query: q, privacyLevel: (request.query as any)?.privacyLevel, take: parseInt((request.query as any)?.take ?? "20") });
-  return results.map((b) => ({ id: b.id, name: b.name, website: b.website, verified: b.verified, privacyLevel: b.privacyLevel }));
+  const results = await searchWithPrivacy({ query: q, take: parseInt((request.query as any)?.take ?? "20") });
+  return results.map((b) => ({ id: b.id, name: b.name, website: b.website, verified: b.verified }));
 });
 
 app.patch("/v1/businesses/:id/logo", async (request, reply) => {
@@ -588,7 +588,7 @@ app.post("/v1/scam-campaigns", async (request, reply) => {
   if (!user) return;
   const body = request.body as { name?: string; phoneIds: string[]; riskScore?: number } | undefined;
   if (!body?.phoneIds) return reply.code(400).send({ error: "phoneIds required" });
-  const result = await createScamCampaign(body.name, body.phoneIds, body.riskScore ?? 0);
+  const result = await createScamCampaign(body.name ?? "", body.phoneIds, body.riskScore ?? 0);
   return { id: result.id, name: result.name, riskScore: result.riskScore, status: result.status };
 });
 
@@ -642,7 +642,7 @@ app.post("/v1/sms", async (request, reply) => {
   if (!user) return;
   const body = request.body as { phoneId: string; messageId?: string; content?: string; riskScore?: number } | undefined;
   if (!body?.phoneId) return reply.code(400).send({ error: "phoneId required" });
-  const result = await createSMSIntegration(body.phoneId, body.messageId, body.content, body.riskScore);
+  const result = await createSMSIntegration(body.phoneId, body.messageId, body.content, body.riskScore ?? 0);
   return { id: result.id, phoneId: result.phoneId, riskScore: result.riskScore };
 });
 
